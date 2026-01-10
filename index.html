@@ -1,3 +1,56 @@
+import os
+
+# BASES DE DATOS CENTRALES
+tabla_posiciones = {}
+liga_peloteros = {} 
+cartelera = []
+
+# FUNCIÓN RESET PARA EVITAR CIERRES POR ERROR
+def leer_numero(mensaje):
+    while True:
+        try:
+            return int(input(mensaje))
+        except ValueError:
+            print("❌ Error: Ingresa un número (ej: 5), no letras.")
+
+def registrar_score():
+    print("\n--- 🏟️ REGISTRO DE SCORE ---")
+    v = input("Visitante: ").strip().upper()
+    cv = leer_numero(f"Carreras {v}: ")
+    h = input("Home Club: ").strip().upper()
+    ch = leer_numero(f"Carreras {h}: ")
+    for eq in [v, h]:
+        if eq not in tabla_posiciones: tabla_posiciones[eq] = {"JJ": 0, "JG": 0, "JP": 0}
+    tabla_posiciones[v]["JJ"] += 1; tabla_posiciones[h]["JJ"] += 1
+    if cv > ch:
+        tabla_posiciones[v]["JG"] += 1; tabla_posiciones[h]["JP"] += 1
+    else:
+        tabla_posiciones[h]["JG"] += 1; tabla_posiciones[v]["JP"] += 1
+
+def vaciar_actuacion():
+    while True:
+        print("\n--- 📝 VACIADO DE ESTADÍSTICAS ---")
+        id_p = input("ID (ej. C-01): ").upper()
+        nom = input("Nombre: ").upper()
+        eq = input("Equipo: ").upper()
+        vb = leer_numero("VB: "); h = leer_numero("H: ")
+        hr = leer_numero("HR: "); rbi = leer_numero("RBI: ")
+        k = leer_numero("Ponches (K): "); jg = leer_numero("Juego Ganado (1=Si, 0=No): ")
+        
+        if id_p not in liga_peloteros:
+            liga_peloteros[id_p] = {"Nombre": nom, "Equipo": eq, "VB": 0, "H": 0, "HR": 0, "RBI": 0, "K": 0, "JG": 0}
+        
+        lp = liga_peloteros[id_p]
+        lp["VB"]+=vb; lp["H"]+=h; lp["HR"]+=hr; lp["RBI"]+=rbi; lp["K"]+=k; lp["JG"]+=jg
+        if input("¿Registrar otro pelotero? (s/n): ").lower() == 'n': break
+
+def gestionar_calendario():
+    print("\n--- 📅 CALENDARIO DE JUEGOS ---")
+    juego = input("Ej: Carabobo vs Aragua | 10/01/26 | Valencia: ")
+    cartelera.append(juego)
+
+def generar_web_final():
+    html = """
 
     <!DOCTYPE html>
     <html lang="es">
@@ -55,4 +108,5 @@
         <p style='padding: 20px; font-size: 10px; color: #444;'>Desarrollado por Alexis Piña | Valencia, Venezuela</p>
     </body>
     </html>
+
     
