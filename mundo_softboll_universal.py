@@ -1,0 +1,144 @@
+import os
+
+# BASES DE DATOS CENTRALES
+tabla_posiciones = {}
+liga_peloteros = {} 
+cartelera = []
+
+# FUNCIÓN RESET PARA EVITAR CIERRES POR ERROR
+def leer_numero(mensaje):
+    while True:
+        try:
+            return int(input(mensaje))
+        except ValueError:
+            print("❌ Error: Ingresa un número (ej: 5), no letras.")
+
+def registrar_score():
+    print("\n--- 🏟️ REGISTRO DE SCORE ---")
+    v = input("Visitante: ").strip().upper()
+    cv = leer_numero(f"Carreras {v}: ")
+    h = input("Home Club: ").strip().upper()
+    ch = leer_numero(f"Carreras {h}: ")
+    for eq in [v, h]:
+        if eq not in tabla_posiciones: tabla_posiciones[eq] = {"JJ": 0, "JG": 0, "JP": 0}
+    tabla_posiciones[v]["JJ"] += 1; tabla_posiciones[h]["JJ"] += 1
+    if cv > ch:
+        tabla_posiciones[v]["JG"] += 1; tabla_posiciones[h]["JP"] += 1
+    else:
+        tabla_posiciones[h]["JG"] += 1; tabla_posiciones[v]["JP"] += 1
+
+def vaciar_actuacion():
+    while True:
+        print("\n--- 📝 VACIADO DE ESTADÍSTICAS ---")
+        id_p = input("ID (ej. C-01): ").upper()
+        nom = input("Nombre: ").upper()
+        eq = input("Equipo: ").upper()
+        vb = leer_numero("VB: "); h = leer_numero("H: ")
+        hr = leer_numero("HR: "); rbi = leer_numero("RBI: ")
+        k = leer_numero("Ponches (K): "); jg = leer_numero("Juego Ganado (1=Si, 0=No): ")
+        
+        if id_p not in liga_peloteros:
+            liga_peloteros[id_p] = {"Nombre": nom, "Equipo": eq, "VB": 0, "H": 0, "HR": 0, "RBI": 0, "K": 0, "JG": 0}
+        
+        lp = liga_peloteros[id_p]
+        lp["VB"]+=vb; lp["H"]+=h; lp["HR"]+=hr; lp["RBI"]+=rbi; lp["K"]+=k; lp["JG"]+=jg
+        if input("¿Registrar otro pelotero? (s/n): ").lower() == 'n': break
+
+def gestionar_calendario():
+    print("\n--- 📅 CALENDARIO DE JUEGOS ---")
+    juego = input("Ej: Carabobo vs Aragua | 10/01/26 | Valencia: ")
+    cartelera.append(juego)
+
+def generar_web_final():
+    html = """
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body { background-color: #001529; color: white; font-family: sans-serif; text-align: center; margin: 0; }
+            .header { background: #002140; padding: 20px; border-bottom: 5px solid #00d2ff; }
+            .ad-banner { background: #edb112; color: #001529; font-weight: bold; padding: 12px; margin: 10px auto; width: 90%; border-radius: 8px; border: 2px solid white; }
+            .card { background: #05192d; border: 1px solid #00d2ff; border-radius: 12px; padding: 15px; margin: 15px auto; max-width: 600px; box-shadow: 0 4px 10px rgba(0,210,255,0.3); }
+            h2 { color: #00d2ff; text-transform: uppercase; font-size: 1.2em; margin-bottom: 10px; }
+            table { width: 100%; border-collapse: collapse; }
+            th { background: #00d2ff; color: #001529; padding: 8px; font-size: 0.8em; }
+            td { padding: 10px; border-bottom: 1px solid #003a70; }
+            .highlight { color: #edb112; font-weight: bold; font-size: 1.1em; }
+            .cal-item { border-left: 5px solid #edb112; background: #002140; padding: 10px; margin: 5px 0; text-align: left; font-size: 0.9em; }
+        </style>
+    </head>
+    <body>
+        <div class="header"><h1>💎 MUNDO SOFTBOL PRO</h1></div>
+        
+        <div class="ad-banner">🔥 PATROCINIO: FIBEX INTERNET - ALTA VELOCIDAD 🔥</div>
+
+        <div class="card">
+            <h2>🏏 LÍDERES DE BATEO</h2>
+            <table>
+                <tr><th>PLAYER</th><th>AVE</th><th>HR</th><th>RBI</th></tr>
+    """
+    # Ordenar por AVE (Promedio) para mostrar a los mejores primero
+    for p in sorted(liga_peloteros.values(), key=lambda x: (x['H']/x['VB'] if x['VB']>0 else 0), reverse=True):
+        ave = p['H']/p['VB'] if p['VB'] > 0 else 0
+        html += f"<tr><td>{p['Nombre']}</td><td class='highlight'>{ave:.3f}</td><td>{p['HR']}</td><td>{p['RBI']}</td></tr>"
+
+    html += """
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>🔥 CHAMPIONS PITCHEO</h2>
+            <table>
+                <tr><th>PLAYER</th><th>K (PONCHES)</th><th>JG (GANADOS)</th></tr>
+    """
+    for p in sorted(liga_peloteros.values(), key=lambda x: x['K'], reverse=True):
+        if p['K'] > 0 or p['JG'] > 0:
+            html += f"<tr><td>{p['Nombre']}</td><td class='highlight'>{p['K']}</td><td>{p['JG']}</td></tr>"
+
+    html += """
+            </table>
+        </div>
+
+        <div class="ad-banner">📢 ANÚNCIATE AQUÍ: CONTACTO 0424-4164730</div>
+
+        <div class="card">
+            <h2>🏆 TABLA DE POSICIONES</h2>
+            <table>
+                <tr><th>EQUIPO</th><th>JJ</th><th>JG</th><th>JP</th></tr>
+    """
+    for eq, d in tabla_posiciones.items():
+        html += f"<tr><td>{eq}</td><td>{d['JJ']}</td><td>{d['JG']}</td><td>{d['JP']}</td></tr>"
+
+    html += """
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>📅 PRÓXIMOS JUEGOS</h2>
+    """
+    for j in cartelera:
+        html += f"<div class='cal-item'>{j}</div>"
+
+    html += """
+        </div>
+        <p style='padding: 20px; font-size: 10px; color: #444;'>Desarrollado por Alexis Piña | Valencia, Venezuela</p>
+    </body>
+    </html>
+    """
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(html)
+    os.system("cp index.html /sdcard/index.html")
+    print("\n🚀 PROYECTO LISTO. Archivo copiado a la raíz de tu memoria interna.")
+
+# MENU PRINCIPAL
+while True:
+    print("\n--- 💎 MUNDO SOFTBOL: GESTIÓN EMPRESARIAL ---")
+    print("1. Registrar Score\n2. Vaciar Estadísticas\n3. Programar Juegos\n4. Generar Web PRO\n5. Salir")
+    op = input("Seleccione: ")
+    if op == "1": registrar_score()
+    elif op == "2": vaciar_actuacion()
+    elif op == "3": gestionar_calendario()
+    elif op == "4": generar_web_final()
+    elif op == "5": break
