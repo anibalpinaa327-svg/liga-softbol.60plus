@@ -127,7 +127,7 @@ def generar_web_final():
     </body>
     </html>
     """
-    with open("index.html", "w", encoding="utf-8") as f:
+    with open("c:/Users/Administrador/Desktop//index.html", "w",encoding="utf-8") as f:
         f.write(html)
     os.system("cp index.html /sdcard/index.html")
     print("\n🚀 PROYECTO LISTO. Archivo copiado a la raíz de tu memoria interna.")
